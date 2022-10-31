@@ -1,9 +1,9 @@
 mod utils;
-
 use std::cmp::Ordering;
 use std::fmt;
 use std::fmt::Formatter;
 use wasm_bindgen::prelude::*;
+use js_sys::Math::random;
 
 // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
 // allocator.
@@ -13,7 +13,7 @@ static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
 #[wasm_bindgen]
 pub fn init() {
-    console_error_panic_hook::set_once();
+    utils::set_panic_hook();
 }
 
 /// Represents a single cell, either dead or alive
@@ -25,9 +25,20 @@ pub enum Cell {
     Alive = 1,
 }
 
+impl Cell {
+    fn toggle(&mut self) {
+        *self = match *self {
+            Cell::Dead  => Cell::Alive,
+            Cell::Alive => Cell::Dead,
+        }
+    }
+
+}
+
 /// Represents the Universe where all cells live
 #[wasm_bindgen]
 pub struct Universe {
+    // TODO: double-buffer
     width: u32,
     height: u32,
     cells: Vec<Cell>,
@@ -53,16 +64,46 @@ impl Universe {
         self.to_string()
     }
 
+    /// Width of the universe (columns)
     pub fn width(&self) -> u32 {
         self.width
     }
 
+    /// Height of the universe (rows)
     pub fn height(&self) -> u32 {
         self.height
     }
 
+    /// Pointer to the first cell in array of all cells
     pub fn cells(&self) -> *const Cell {
         self.cells.as_ptr()
+    }
+
+    /// Toggle state of cell between dead and alive
+    pub fn toggle_cell(&mut self, row: u32, column: u32) {
+        let idx = self.get_index(row, column);
+        self.cells[idx].toggle();
+    }
+
+    /// Set the width of the universe
+    ///
+    /// All cells will die
+    pub fn set_width(&mut self, width: u32) {
+        self.width = width;
+        self.kill_all_cells();
+    }
+
+    /// Set the height of the universe
+    ///
+    /// All cells will DIE
+    pub fn set_height(&mut self, height: u32) {
+        self.height = height;
+        self.kill_all_cells();
+    }
+
+    /// Kills all cells
+    pub fn clear(&mut self) {
+        self.kill_all_cells();
     }
 }
 
@@ -121,17 +162,40 @@ impl Universe {
 
         next_generation
     }
+
+    fn kill_all_cells(&mut self) {
+        self.cells = (0..self.height * self.width).map(|_| Cell::Dead).collect();
+    }
+}
+
+/// For Rust testing
+impl Universe {
+    /// Get all cells
+    pub fn get_cells(&self) -> &[Cell] {
+        &self.cells
+    }
+
+    /// Pass in array of (row, column) to set cells at those coordinates to
+    /// be alive
+    pub fn set_cells(&mut self, cells: &[(u32, u32)]) {
+        for (row, col) in cells.iter().cloned() {
+            let idx = self.get_index(row, col);
+            self.cells[idx] = Cell::Alive;
+        }
+    }
+
+
 }
 
 impl Default for Universe {
     fn default() -> Self {
-        let width = 64;
-        let height = 64;
-        let cells = (0..width * height).map(|i| {
-            if i % 2 == 0 || i % 7 == 0 {
-                Cell::Alive
-            } else {
-                Cell::Dead
+        let width = 100;
+        let height = 100;
+        let cells = (0..width * height).map(|_| {
+            match random().total_cmp(&0.6) {
+                Ordering::Greater => Cell::Alive,
+                Ordering::Less    => Cell::Dead,
+                Ordering::Equal   => Cell::Dead,
             }
         }).collect();
 
