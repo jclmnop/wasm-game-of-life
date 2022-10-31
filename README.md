@@ -10,6 +10,14 @@
 ## About
 Conway's Game of Life is essentially the "Hello world!" of Rust + WASM
 
+## TODO:
+- [ ] Double buffered cells vec to reduce render time
+- [ ] Speed slider to adjust max framerate
+- [ ] Remove modulo operators from tick() to reduce render time
+- [ ] Use webGL instead of canvas
+- [ ] Rust-only fork (use a no js framework)
+- [ ] Improve UI
+
 ## 🚴 Usage
 
 ### 🛠️ Build with `wasm-pack build`
