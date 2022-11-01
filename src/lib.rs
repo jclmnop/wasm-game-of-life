@@ -38,9 +38,9 @@ impl Cell {
 /// Represents the Universe where all cells live
 #[wasm_bindgen]
 pub struct Universe {
-    // TODO: double-buffer
     width: u32,
     height: u32,
+    next_cells: Vec<Cell>,
     cells: Vec<Cell>,
 }
 
@@ -56,7 +56,8 @@ impl Universe {
     /// Calculates next generation of cells and updates from previous
     /// generation to next generation.
     pub fn tick(&mut self) {
-        self.cells = self.next_generation();
+        self.next_generation();
+        self.cells = self.next_cells.clone();
     }
 
     /// Render current universe state as text
@@ -134,10 +135,10 @@ impl Universe {
         count
     }
 
-    fn next_generation(&self) -> Vec<Cell> {
+    fn next_generation(&mut self) {
         // Cloned because we need to refer to previous gen while calculating
         // next gen anyway
-        let mut next_generation = self.cells.clone();
+        self.next_cells = self.cells.clone();
 
         for row in 0..self.height {
             for col in 0..self.width {
@@ -145,7 +146,7 @@ impl Universe {
                 let cell = self.cells[idx];
                 let live_neighbours = self.live_neighbour_count(row, col);
 
-                next_generation[idx] = match (cell, live_neighbours) {
+                self.next_cells[idx] = match (cell, live_neighbours) {
                     // Rule 1: Underpopulation
                     (Cell::Alive, n) if n < 2           => Cell::Dead,
                     // Rule 2: Stable population
@@ -160,7 +161,7 @@ impl Universe {
             }
         }
 
-        next_generation
+
     }
 
     fn kill_all_cells(&mut self) {
@@ -191,7 +192,7 @@ impl Default for Universe {
     fn default() -> Self {
         let width = 100;
         let height = 100;
-        let cells = (0..width * height).map(|_| {
+        let cells: Vec<Cell> = (0..width * height).map(|_| {
             match random().total_cmp(&0.6) {
                 Ordering::Greater => Cell::Alive,
                 Ordering::Less    => Cell::Dead,
@@ -202,7 +203,8 @@ impl Default for Universe {
         Universe {
             width,
             height,
-            cells
+            next_cells: cells.clone(),
+            cells,
         }
     }
 }

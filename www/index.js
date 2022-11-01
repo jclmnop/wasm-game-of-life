@@ -60,9 +60,6 @@ const drawCells = () => {
 
     ctx.beginPath();
 
-    // This loop was split into two loops because assigning fillStyle() has
-    // unexpected overhead.
-    // TODO: write a function that takes colour + cell state to paint
     paintCells(DEAD_COLOR, Cell.Dead, cells);
     paintCells(ALIVE_COLOR, Cell.Alive, cells);
     ctx.stroke();
