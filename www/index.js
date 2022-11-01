@@ -5,6 +5,7 @@ const CELL_SIZE = 5; // px
 const GRID_COLOR = "#CCCCCC";
 const DEAD_COLOR = "#FFFFFF";
 const ALIVE_COLOR = "#000000";
+const MAX_SPEED = 500;
 
 const universe = Universe.new();
 const height = universe.height();
@@ -14,6 +15,13 @@ const canvas = document.getElementById("game-of-life-canvas");
 canvas.height = (CELL_SIZE + 1) * height + 1;
 canvas.width = (CELL_SIZE + 1) * width + 1;
 
+const slider = document.getElementById("speed-slider");
+const sliderOutput = document.getElementById("speed-output");
+let speed = MAX_SPEED - slider.value;
+sliderOutput.textContent = slider.value;
+
+let paused = false;
+
 const ctx = canvas.getContext('2d');
 
 const getIndex = (row, column) => {
@@ -22,13 +30,18 @@ const getIndex = (row, column) => {
 
 let animationId = null;
 
-const renderLoop = () => {
+const sleep = (delay) => new Promise((resolve => setTimeout(resolve, delay)));
+
+const renderLoop = async () => {
     universe.tick();
 
     drawGrid();
     drawCells();
 
-    animationId = requestAnimationFrame(renderLoop);
+    await sleep(speed);
+    if (!paused) {
+        animationId = requestAnimationFrame(renderLoop);
+    }
 };
 
 const isPaused = () => {
@@ -87,20 +100,22 @@ const playPauseButton = document.getElementById("play-pause");
 const clearButton = document.getElementById("clear");
 clearButton.textContent = "💀";
 
-const play = () => {
+const play = async () => {
+    paused = false;
     playPauseButton.textContent = "⏸";
-    renderLoop();
+    await renderLoop();
 };
 
 const pause = () => {
+    paused = true;
     playPauseButton.textContent = "▶️";
     cancelAnimationFrame(animationId);
     animationId = null;
 };
 
-playPauseButton.addEventListener("click", event => {
+playPauseButton.addEventListener("click", async event => {
     if (isPaused()) {
-        play();
+        await play();
     } else {
         pause();
     }
@@ -110,6 +125,11 @@ clearButton.addEventListener("click", event => {
     universe.clear();
     drawGrid();
     drawCells();
+})
+
+slider.addEventListener("input", event => {
+    speed = MAX_SPEED - slider.value;
+    sliderOutput.textContent = slider.value;
 })
 
 canvas.addEventListener("click", event => {
