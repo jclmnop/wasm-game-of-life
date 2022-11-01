@@ -63,39 +63,28 @@ const drawCells = () => {
     // This loop was split into two loops because assigning fillStyle() has
     // unexpected overhead.
     // TODO: write a function that takes colour + cell state to paint
-    ctx.fillStyle = DEAD_COLOR;
-    for (let row = 0; row < height; row++) {
-        for (let col = 0; col < width; col++) {
-            const idx = getIndex(row, col);
-            if (cells[idx] === Cell.Dead) {
-                ctx.fillRect(
-                    col * (CELL_SIZE + 1) + 1,
-                    row * (CELL_SIZE + 1) + 1,
-                    CELL_SIZE,
-                    CELL_SIZE
-                );
-            }
-        }
-    }
-
-    ctx.fillStyle = ALIVE_COLOR;
-    for (let row = 0; row < height; row++) {
-        for (let col = 0; col < width; col++) {
-            const idx = getIndex(row, col);
-            if (cells[idx] === Cell.Alive) {
-                ctx.fillRect(
-                    col * (CELL_SIZE + 1) + 1,
-                    row * (CELL_SIZE + 1) + 1,
-                    CELL_SIZE,
-                    CELL_SIZE
-                );
-            }
-        }
-    }
-
-
+    paintCells(DEAD_COLOR, Cell.Dead, cells);
+    paintCells(ALIVE_COLOR, Cell.Alive, cells);
     ctx.stroke();
 };
+
+const paintCells = (colour, cellState, cells) => {
+    ctx.fillStyle = colour;
+    for (let row = 0; row < height; row++) {
+        for (let col = 0; col < width; col++) {
+            const idx = getIndex(row, col);
+            if (cells[idx] === cellState) {
+                ctx.fillRect(
+                    col * (CELL_SIZE + 1) + 1,
+                    row * (CELL_SIZE + 1) + 1,
+                    CELL_SIZE,
+                    CELL_SIZE
+                );
+            }
+        }
+    }
+
+}
 
 const playPauseButton = document.getElementById("play-pause");
 const clearButton = document.getElementById("clear");
