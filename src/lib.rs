@@ -192,8 +192,9 @@ impl Default for Universe {
     fn default() -> Self {
         let width = 100;
         let height = 100;
+        let distribution = random();
         let cells: Vec<Cell> = (0..width * height).map(|_| {
-            match random().total_cmp(&0.6) {
+            match random().total_cmp(&distribution) {
                 Ordering::Greater => Cell::Alive,
                 Ordering::Less    => Cell::Dead,
                 Ordering::Equal   => Cell::Dead,
